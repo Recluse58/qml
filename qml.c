@@ -1,4 +1,3 @@
-
 #include <config.h>
 
 #undef QML_DLLMAIN
@@ -23,6 +22,10 @@
 #include <clapack.h>
 #include <conmax.h>
 
+#ifndef KXVER
+ #define KXVER 3
+#endif
+
 #include <k.h>
 
 #undef QML_EXPORT
@@ -35,13 +38,14 @@
 
 // Return 1 if argument can be converted to I atom
 ZI mi1p(K x) {
-    R xt==-KB || xt<=-KG && xt>=-KI;
+    R xt==-KB || xt<=-KG && xt>=-KJ;
 }
 
 // Return I value for argument
 ZI mi1i(K x) {
     SW(xt) {
         CS(-KI, R xi==ni ? ni : xi==wi ? wi : xi==-wi ? -wi : xi)
+		CS(-KJ, R xj==nj ? ni : xj==wj ? wi : xj==-wj ? -wi : (I)xj)
         CS(-KH, R xh==nh ? ni : xh==wh ? wi : xh==-wh ? -wi : xh)
         case -KB:
         CS(-KG, R xg)
@@ -61,7 +65,7 @@ ZI mip(K x) {
         DO(xn, U(mi1p(xK[i])))
         R 1;
     } else
-        R mi1p(x) || xt==KB || xt>=KG && xt<=KI;
+        R mi1p(x) || xt==KB || xt>=KG && xt<=KJ;
 }
 
 // Make new I atom or vector out of B, G, H or I argument
@@ -72,6 +76,8 @@ Z K1(mi) {
     n = ktn(KI, xn);
     SW(xt) {
         CS(KI, memcpy(kI(n), xI, xn*sizeof(I)))
+        CS(KJ, DO(xn, kI(n)[i] = xJ[i]==nj ? ni :
+			xJ[i]==wj ? wi : xJ[i]==-wj ? -wi : (I)xJ[i]))
         CS(KH, DO(xn, kI(n)[i] = xH[i]==nh ? ni :
             xH[i]==wh ? wi : xH[i]==-wh ? -wi : xH[i]))
         case KB:
@@ -303,12 +309,24 @@ Z integer min_i(I x, I y) {
     R x<=y ? x : y;
 }
 
+Z integer min_j(J x, J y) {
+    R x<=y ? x : y;
+}
+
 Z integer max_i(I x, I y) {
+    R x>=y ? x : y;
+}
+
+Z integer max_j(J x, J y) {
     R x>=y ? x : y;
 }
 
 ZV swap_i(I* x, I* y) {
     I v = *x; *x = *y; *y = v;
+}
+
+ZV swap_j(J* x, J* y) {
+    J v = *x; *x = *y; *y = v;
 }
 
 // Make new F vector out of square matrix argument, column-major order
@@ -608,9 +626,9 @@ K QML_EXPORT qml_mlup(K x) {
         DO(j, kF(kK(xK[1])[j])[i] = 0)
         DO(n-j, kF(kK(xK[1])[j])[j+i] = kF(a)[(j+i)*m+j])
     }
-    xK[2] = ktn(KI, m);
-    DO(m, kI(xK[2])[i] = i)
-    DO(min, swap_i(kI(xK[2])+i, kI(xK[2])+(QML_kLONG(ipiv)[i]-1)))
+    xK[2] = ktn(KJ, m);
+    DO(m, kJ(xK[2])[i] = i)
+    DO(min, swap_j(kJ(xK[2])+i, kJ(xK[2])+(QML_kLONG(ipiv)[i]-1)))
     r0(ipiv); r0(a); R x;
 }
 
@@ -1391,8 +1409,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
 K QML_EXPORT qml_const(K x) {
     F r;
     P(!initialized, krr(ss("qml_assert"))) // catch potentially missed init here
-    P(xt!=-KI, krr(ss("type")))
-    SW(xi) {
+    P(xt!=-KJ, krr(ss("type")))
+    SW(xj) {
         CS(0,R ks(QUOTE(QML_VERSION)))
         CS(1,r=3.1415926535897932384626433832795028842)
         CS(2,r=2.7182818284590452353602874713526624978)

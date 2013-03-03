@@ -19,7 +19,7 @@
 
 # KXVER
 # 3 or 2
-KXVER=2
+KXVER=3
 
 ifeq "$(findstring $(BUILD),private gpl)" ""
     BUILD=bsd
