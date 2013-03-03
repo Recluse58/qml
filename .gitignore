@@ -1,3 +1,11 @@
-download
-fdlibm
-include
+download/
+fdlibm/
+include/
+build/
+cephes/
+clapack/
+conmax/
+f2c/
+lib/
+qlib/
+w32/

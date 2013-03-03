@@ -17,11 +17,14 @@
 #     Cephes from Netlib, which has a note allowing free use.  poly implemented
 #     using LAPACK.  Result is distributable under a BSD-style license.
 
+# KXVER
+# 3 or 2
+KXVER=2
+
 ifeq "$(findstring $(BUILD),private gpl)" ""
     BUILD=bsd
 endif
 $(info Build type: $(BUILD))
-
 
 # Platform
 #   w32
@@ -87,6 +90,7 @@ PLATFORMCLASS=$(patsubst v,s,$(patsubst %64,%,$(patsubst %32,%,$(PLATFORM))))
 #
 #   gnu:
 #     GNU
+#   mingw32
 
 ifeq "$(TOOLCHAIN)" "mssdk"
 else
@@ -102,7 +106,7 @@ endif
 
 
 # Compiler and flags
-DEFINES=-D_IEEE_LIBM -D__LITTLE_ENDIAN -D_REENTRANT
+DEFINES=-D_IEEE_LIBM -D__LITTLE_ENDIAN -D_REENTRANT -DKXVER=$(KXVER)
 CFLAGS=
 
 ifeq "$(TOOLCHAIN)" "mssdk"
@@ -119,7 +123,7 @@ ifeq "$(TOOLCHAIN)" "mssdk"
     DLLEXT=dll
     EXEEXT=.exe
     CFLAGS+= -Ox -Oi-
-    DEFINES+= -D__STDC__ -DWIN32 -D_USE_MATH_DEFINES
+    DEFINES+= -D__STDC__ -DWIN32 -D_USE_MATH_DEFINES 
     cc=$(CL) $(DEFINES) $(2) $(CFLAGS) -c $(patsubst %,'%',$(1))
     ar=$(LINK) -lib -out:$(1).$(LIBEXT) $(patsubst %,'%',$(2))
     ccdll=$(CL) $(DEFINES) $(4) $(CFLAGS) -LD $(patsubst %,'%',$(2)) \
@@ -153,7 +157,9 @@ else
     ifeq "$(PLATFORMCLASS)" "w"
         DLLEXT=dll
         EXEEXT=.exe
-        CFLAGS+= -mno-cygwin
+        ifneq "$(TOOLCHAIN)" "mingw32"
+        	CFLAGS+= -mno-cygwin
+        endif
     else
         DLLEXT=so
         EXEEXT=
@@ -480,7 +486,6 @@ else
 	    -exec rm -- '{}' ';' -exec mv clapack/.tmp.h '{}' ';'
       endif
 	touch '$@'
-
     clapack/.built: clapack/.patched
 	cd clapack/F2CLIBS/libf2c && make hadd
 	cd clapack && make f2clib
@@ -490,6 +495,11 @@ else
 	cp -f clapack/INCLUDE/f2c.h clapack/SRC
 	cp -f clapack/INCLUDE/blaswrap.h clapack/BLAS/SRC
 	cp -f clapack/INCLUDE/blaswrap.h clapack/SRC
+
+	cp -f clapack/INCLUDE/f2c.h clapack/INSTALL
+	cp -f clapack/INCLUDE/blaswrap.h clapack/INSTALL
+	cp -f clapack/INCLUDE/clapack.h clapack/INSTALL
+
 	cd clapack && make blaslib lapacklib
 	touch '$@'
 
