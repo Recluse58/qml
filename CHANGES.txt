@@ -1,3 +1,6 @@
+
+Version 0.2.2 on 2013-03-03:
+  * Support building with MINGW32.
 Version 0.2.1 on 2010-02-17:
   * Added 'root'/'rootx', 'solve'/'solvex', 'line'/'linex', 'min'/'minx' and
    'conmin'/'conminx' nonlinear optimization functions.
